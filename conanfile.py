@@ -37,7 +37,6 @@ class grpcConan(ConanFile):
 
     requires = (
         "zlib/1.2.11@conan/stable",
-        "OpenSSL/1.0.2q@conan/stable",
         "protobuf/3.6.1@bincrafters/stable",
         "protoc_installer/3.6.1@bincrafters/stable",
         "c-ares/1.14.0@conan/stable"
@@ -51,9 +50,8 @@ class grpcConan(ConanFile):
                 raise ConanInvalidConfiguration("gRPC can only be built with Visual Studio 2015 or higher.")
 
     def source(self):
-        archive_url = "https://github.com/grpc/grpc/archive/v{}.zip".format(self.version)
-        tools.get(archive_url, sha256="9ebbf19d1efdcb75e9f7780ded5ee9ddaa6f9bee568dbc137ca4441dedfe134f")
-        os.rename("grpc-{!s}".format(self.version), self._source_subfolder)
+        self.run("git clone https://github.com/grpc/grpc.git --depth 1 --single-branch --branch v{} {}".format(self.version, self._source_subfolder))
+        self.run("cd {} && git submodule update --init third_party/boringssl".format(self._source_subfolder))
 
         # cmake_name = "{}/CMakeLists.txt".format(self._source_subfolder)
 
@@ -104,7 +102,7 @@ class grpcConan(ConanFile):
         # tell grpc to use the find_package versions
         cmake.definitions['gRPC_CARES_PROVIDER'] = "package"
         cmake.definitions['gRPC_ZLIB_PROVIDER'] = "package"
-        cmake.definitions['gRPC_SSL_PROVIDER'] = "package"
+        cmake.definitions['gRPC_SSL_PROVIDER'] = "module"
         cmake.definitions['gRPC_PROTOBUF_PROVIDER'] = "package"
 
         # Workaround for https://github.com/grpc/grpc/issues/11068
